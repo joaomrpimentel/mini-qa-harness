@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Notes</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; background: #f4f4f5; color: #18181b; display: grid; place-items: center; min-height: 100vh; margin: 0; }
+  form { background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 1px 3px #0002; width: 320px; display: grid; gap: 12px; }
+  input, button { font: inherit; padding: 8px 10px; border-radius: 6px; border: 1px solid #d4d4d8; }
+  button { background: #18181b; color: #fff; border: 0; cursor: pointer; }
+  .err { color: #b91c1c; }
+</style>
+</head>
+<body>
+<form method="post" action="/login">
+  <h1>Notes</h1>
+  <p class="err" id="err" hidden>Wrong user or password.</p>
+  <label>User <input name="user" autocomplete="username"></label>
+  <label>Password <input name="password" type="password" autocomplete="current-password"></label>
+  <button type="submit">Sign in</button>
+  <small>admin / demo · viewer / demo</small>
+</form>
+<script>if (location.search.includes('error')) document.getElementById('err').hidden = false;</script>
+</body>
+</html>

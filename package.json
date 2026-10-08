@@ -1,0 +1,31 @@
+{
+  "name": "mini-qa-harness",
+  "version": "0.1.0",
+  "description": "A small harness that lets LLM agents test a web app through the UI like a person would, and turns what they find into verified, reproducible bug reports with screenshots, network evidence and an optional Jam recording.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Jo\u00e3o Pimentel",
+  "bin": {
+    "qa": "bin/qa.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "templates",
+    "skill",
+    "qa.config.example.mjs"
+  ],
+  "scripts": {
+    "demo": "node demo/server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright": "^1.55.0"
+  }
+}
