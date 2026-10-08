@@ -4,17 +4,10 @@
 
 A small harness that lets LLM agents test a web app through its UI, the way a person would, and turns what they find into bug reports a developer can reproduce: numbered screenshots, the network calls the page made, a Playwright trace and, when you want it, a Jam video. Nothing is posted until a human approves it.
 
-```mermaid
-flowchart LR
-  U([You]) -->|picks a feature, approves drafts| M[Main session]
-  M -->|one charter each| T1[Tester agent]
-  M --> T2[Tester agent]
-  T1 & T2 -->|UI only| A[(App under test)]
-  T1 & T2 -->|screenshots, network, trace| E[/evidence/]
-  E --> M
-  M -->|verified bug| D[Draft report]
-  D -->|after your OK| G[GitHub issue + Jam link]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/flow.en.dark.svg">
+  <img alt="How a QA run flows: you, the main session, tester agents, the app, evidence, draft report and GitHub" src="docs/diagrams/flow.en.svg">
+</picture>
 
 It came out of a real QA push on a staging environment, where a few small agents tested tickets in parallel and a reviewing session threw out every "bug" that was really a stale deploy, a missing migration or a missing permission. This repo is that harness with the project-specific parts replaced by configuration.
 

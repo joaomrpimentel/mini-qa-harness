@@ -8,31 +8,12 @@ The harness started as a set of scripts used to QA a web application in its stag
 
 ## The pieces
 
-```mermaid
-flowchart TB
-  U(["User"]) -- "picks feature, approves drafts" --> M["Main session<br/>orchestrator and verifier"]
-  M -- "charter + prompt" --> T["Tester agents<br/>in parallel"]
-  subgraph test["Testing path"]
-    direction LR
-    R["reproduce k/k"] --> S["session recorder"] --> C["config + auth adapters"]
-  end
-  subgraph out["Reporting path, main session only"]
-    direction LR
-    J["jam + drawn cursor"]
-    P["report render"] --> G["github upload"]
-  end
-  T --> R
-  S -- "drives the UI" --> A[("App under test")]
-  S -- "screenshots, network, trace" --> E[("evidence/ on disk")]
-  E -- "read by" --> M
-  M --> J
-  M --> P
-  J -- "records the reproduction" --> A
-  J --> X["Jam / GitHub"]
-  G --> X
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../diagrams/pieces.en.dark.svg">
+  <img alt="The pieces: testing path and reporting path" src="../../diagrams/pieces.en.svg">
+</picture>
 
-How to read it: the testing path, on top, never reaches Jam or GitHub. Testers touch the library only through `reproduce` and the session, and the session is the only thing that talks to the app. Everything a tester produces lands in `evidence/`, and the main session reads it from there. The reporting path, at the bottom, belongs to the main session alone, and its arrows to the outside world are used only after the user has approved a draft.
+How to read it: the testing path, in blue, never reaches Jam or GitHub. Testers touch the library only through `reproduce` and the session, and the session is the only thing that talks to the app. Everything a tester produces lands in `evidence/`, and the main session reads it from there. The reporting path, in orange at the bottom, belongs to the main session alone, and its arrows to the outside world are used only after the user has approved a draft.
 
 | Piece | File | What it does |
 |---|---|---|
@@ -46,75 +27,28 @@ How to read it: the testing path, on top, never reaches Jam or GitHub. Testers t
 
 ## One QA run
 
-```mermaid
-sequenceDiagram
-  actor U as User
-  participant M as Main session
-  participant T as Tester agents
-  participant A as App under test
-  participant E as evidence/
-  participant G as GitHub / Jam
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../diagrams/run.en.dark.svg">
+  <img alt="One QA run, from ticket to issue, with the human gate" src="../../diagrams/run.en.svg">
+</picture>
 
-  U->>M: feature to test
-  M->>M: read criteria, check the environment
-  M->>A: qa smoke (every profile signs in)
-  M->>T: one charter per agent, in parallel
-  T->>A: drive the UI, run each case
-  T->>A: rerun failures with reproduce, fresh sessions
-  T->>E: screenshots, evidence.json, trace.zip, drafts
-  T-->>M: session report
-  M->>E: open the artifacts, not the report prose
-  M->>A: rule out the environment, reproduce if needed
-  M->>G: record confirmed bugs with Jam (optional)
-  M-->>U: drafts and the ticket comment
-  Note over U,M: human gate: nothing leaves without the user's order
-  U->>M: edits, then "post it"
-  M->>G: upload images, create issue, comment
-```
-
-How to read it: the line that matters is the note. Before it, everything is local and can be thrown away. After it, text goes out under someone's name. The verifier step reads `evidence/`, not the session report, which is why there are two arrows from the main session into the right side: one to the artifacts and one back to the app.
+How to read it: the diamond is the human gate. Before it, everything is local and can be thrown away. After it, text goes out under someone's name. Verify reads `evidence/`, not the testers' report, and it is the first step allowed to read code, call the API or look at the environment, to rule out a fake bug.
 
 ## What happens to a finding
 
-```mermaid
-stateDiagram-v2
-  [*] --> Observed: a case fails once
-  Observed --> Reproduced: same verdict k of k, fresh sessions
-  Observed --> Flaky: verdicts differ between runs
-  Flaky --> Observation
-  Reproduced --> Verified: main session checks artifacts and environment
-  Verified --> Bug: feature contradicts a named oracle
-  Verified --> NotTested: precondition missing, with reason
-  Verified --> Observation: low severity or no oracle
-  Bug --> Drafted
-  Drafted --> Approved: user edits and orders
-  Approved --> Posted
-  NotTested --> Comment
-  Observation --> Comment
-  Posted --> [*]
-  Comment --> [*]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../diagrams/states.en.dark.svg">
+  <img alt="Life of a finding, from observed to posted or commented" src="../../diagrams/states.en.svg">
+</picture>
 
-How to read it: only one path reaches `Posted` as an issue, and it crosses three filters: reproduction, verification and approval. The other exits are not failures of the process. `NotTested` and `Observation` still go out, inside the comment on the feature ticket, so the team knows what was not covered and why.
+How to read it: only one path reaches `Posted` as an issue, and it crosses three filters: reproduction, verification and approval. The other exits are not failures of the process. `NOT_TESTED` and `Observation` still go out, inside the comment on the feature ticket, so the team knows what was not covered and why.
 
 ## What a session writes
 
-```mermaid
-flowchart TB
-  case["evidence/delete-pinned/"]
-  res["result.json<br/>verdict, summary BUG 2/2, runs"]
-  r1["run-1/"]
-  r2["run-2/"]
-  s1["01-pinned-note-created.png<br/>02-after-delete.png<br/>03-after-reload.png"]
-  j1["evidence.json<br/>profile, shots, network, console, pageErrors"]
-  tr["trace.zip<br/>kept only when the verdict is not OK"]
-  case --> res
-  case --> r1
-  case --> r2
-  r1 --> s1
-  r1 --> j1
-  r1 --> tr
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../diagrams/evidence.en.dark.svg">
+  <img alt="What a test case leaves on disk" src="../../diagrams/evidence.en.svg">
+</picture>
 
 How to read it: one folder per case, one subfolder per run. The screenshots are numbered in the order they were taken, so the folder reads as the steps. `evidence.json` holds what the page did on the network (bodies only for errors and writes) and what it printed to the console. The Playwright trace, with DOM snapshots and network bodies, is kept only for runs that did not pass, because it is heavy and a passing run rarely needs one. The field list is in the [evidence reference](../reference/evidence.md).
 

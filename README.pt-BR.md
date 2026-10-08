@@ -4,17 +4,10 @@
 
 Um harness pequeno para agentes de LLM testarem uma aplicação web pela tela, como uma pessoa testaria, e transformarem o que acham em bug que um dev consegue reproduzir: prints numeradas, as chamadas de rede que a própria página fez, um trace do Playwright e, se você quiser, um vídeo do Jam. Nada é postado sem uma pessoa aprovar.
 
-```mermaid
-flowchart LR
-  U([Você]) -->|escolhe a feature, aprova os rascunhos| M[Sessão principal]
-  M -->|um charter para cada| T1[Agente testador]
-  M --> T2[Agente testador]
-  T1 & T2 -->|só pela tela| A[(App testada)]
-  T1 & T2 -->|prints, rede, trace| E[/evidence/]
-  E --> M
-  M -->|bug verificado| D[Rascunho do relatório]
-  D -->|depois do seu ok| G[Issue no GitHub + link do Jam]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/flow.pt-BR.dark.svg">
+  <img alt="Como uma rodada de QA corre: você, sessão principal, agentes testadores, app, evidência, rascunho e GitHub" src="docs/diagrams/flow.pt-BR.svg">
+</picture>
 
 Ele nasceu de uma força-tarefa de QA num ambiente de staging. Alguns agentes pequenos testavam tickets em paralelo, e uma sessão revisora descartava todo "bug" que na verdade era deploy velho, migration faltando ou permissão ausente. Este repo é aquele harness, com as partes específicas do projeto trocadas por configuração.
 

@@ -8,31 +8,12 @@ O harness nasceu como um punhado de scripts usados para fazer QA de uma aplicaç
 
 ## As peças
 
-```mermaid
-flowchart TB
-  U(["Usuário"]) -- "escolhe a feature, aprova rascunhos" --> M["Sessão principal<br/>orquestra e verifica"]
-  M -- "charter + prompt" --> T["Agentes testadores<br/>em paralelo"]
-  subgraph test["Caminho do teste"]
-    direction LR
-    R["reproduce k/k"] --> S["gravador da sessão"] --> C["config + adaptadores de auth"]
-  end
-  subgraph out["Caminho do relato, só a sessão principal"]
-    direction LR
-    J["jam + cursor desenhado"]
-    P["render do relatório"] --> G["upload no github"]
-  end
-  T --> R
-  S -- "dirige a tela" --> A[("App testado")]
-  S -- "prints, rede, trace" --> E[("evidence/ em disco")]
-  E -- "lido pela" --> M
-  M --> J
-  M --> P
-  J -- "grava a reprodução" --> A
-  J --> X["Jam / GitHub"]
-  G --> X
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../diagrams/pieces.pt-BR.dark.svg">
+  <img alt="As peças: caminho do teste e caminho do relato" src="../../diagrams/pieces.pt-BR.svg">
+</picture>
 
-Como ler: o caminho do teste, em cima, nunca chega ao Jam nem ao GitHub. O testador só toca a biblioteca pelo `reproduce` e pela sessão, e a sessão é a única coisa que fala com o app. Tudo o que o testador produz cai em `evidence/`, e a sessão principal lê dali. O caminho do relato, embaixo, é só da sessão principal, e as setas dele para fora só são usadas depois que o usuário aprovou um rascunho.
+Como ler: o caminho do teste, em azul, nunca chega ao Jam nem ao GitHub. O testador só toca a biblioteca pelo `reproduce` e pela sessão, e a sessão é a única coisa que fala com o app. Tudo o que o testador produz cai em `evidence/`, e a sessão principal lê dali. O caminho do relato, em laranja embaixo, é só da sessão principal, e as setas dele para fora só são usadas depois que o usuário aprovou um rascunho.
 
 | Peça | Arquivo | O que faz |
 |---|---|---|
@@ -46,75 +27,28 @@ Como ler: o caminho do teste, em cima, nunca chega ao Jam nem ao GitHub. O testa
 
 ## Uma rodada de QA
 
-```mermaid
-sequenceDiagram
-  actor U as Usuário
-  participant M as Sessão principal
-  participant T as Agentes testadores
-  participant A as App testado
-  participant E as evidence/
-  participant G as GitHub / Jam
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../diagrams/run.pt-BR.dark.svg">
+  <img alt="Uma rodada de QA, do ticket à issue, com o portão humano" src="../../diagrams/run.pt-BR.svg">
+</picture>
 
-  U->>M: feature para testar
-  M->>M: lê os critérios, confere o ambiente
-  M->>A: qa smoke (todo perfil entra)
-  M->>T: um charter por agente, em paralelo
-  T->>A: dirige a tela, roda cada caso
-  T->>A: reroda as falhas com reproduce, sessão nova
-  T->>E: prints, evidence.json, trace.zip, rascunhos
-  T-->>M: relatório da sessão
-  M->>E: abre os artefatos, não a prosa do relatório
-  M->>A: descarta o ambiente, reproduz se precisar
-  M->>G: grava os bugs confirmados com o Jam (opcional)
-  M-->>U: rascunhos e o comentário da task
-  Note over U,M: portão humano: nada sai sem a ordem do usuário
-  U->>M: edita, depois "pode postar"
-  M->>G: sobe imagens, cria issue, comenta
-```
-
-Como ler: a linha que importa é a nota. Antes dela, tudo é local e pode ir para o lixo. Depois dela, texto sai com o nome de alguém. O passo de verificação lê `evidence/`, não o relatório da sessão, e por isso a sessão principal tem duas setas para a direita: uma para os artefatos e outra de volta para o app.
+Como ler: o losango é o portão humano. Antes dele, tudo é local e pode ir para o lixo. Depois dele, texto sai com o nome de alguém. Verificar lê `evidence/`, não o relatório dos testadores, e é o primeiro passo que pode ler código, chamar a API ou olhar o ambiente, para descartar bug falso.
 
 ## O que acontece com um achado
 
-```mermaid
-stateDiagram-v2
-  [*] --> Observado: um caso falha uma vez
-  Observado --> Reproduzido: mesmo veredito k de k, sessões novas
-  Observado --> Instavel: vereditos diferentes entre rodadas
-  Instavel --> Observacao
-  Reproduzido --> Verificado: sessão principal confere artefatos e ambiente
-  Verificado --> Bug: feature contradiz um oráculo nomeado
-  Verificado --> NaoTestado: falta pré-condição, com motivo
-  Verificado --> Observacao: gravidade baixa ou sem oráculo
-  Bug --> Rascunho
-  Rascunho --> Aprovado: usuário edita e dá a ordem
-  Aprovado --> Postado
-  NaoTestado --> Comentario
-  Observacao --> Comentario
-  Postado --> [*]
-  Comentario --> [*]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../diagrams/states.pt-BR.dark.svg">
+  <img alt="A vida de um achado, de observado a postado ou comentado" src="../../diagrams/states.pt-BR.svg">
+</picture>
 
-Como ler: só um caminho chega a `Postado` como issue, e ele atravessa três filtros: reprodução, verificação e aprovação. As outras saídas não são falha do processo. `NaoTestado` e `Observacao` também saem, dentro do comentário da task, para o time saber o que ficou sem cobertura e por quê.
+Como ler: só um caminho chega a `Postado` como issue, e ele atravessa três filtros: reprodução, verificação e aprovação. As outras saídas não são falha do processo. `NOT_TESTED` e `Observação` também saem, dentro do comentário da task, para o time saber o que ficou sem cobertura e por quê.
 
 ## O que uma sessão grava
 
-```mermaid
-flowchart TB
-  case["evidence/delete-pinned/"]
-  res["result.json<br/>veredito, resumo BUG 2/2, rodadas"]
-  r1["run-1/"]
-  r2["run-2/"]
-  s1["01-pinned-note-created.png<br/>02-after-delete.png<br/>03-after-reload.png"]
-  j1["evidence.json<br/>perfil, prints, rede, console, pageErrors"]
-  tr["trace.zip<br/>só fica quando o veredito não é OK"]
-  case --> res
-  case --> r1
-  case --> r2
-  r1 --> s1
-  r1 --> j1
-  r1 --> tr
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../diagrams/evidence.pt-BR.dark.svg">
+  <img alt="O que um caso deixa no disco" src="../../diagrams/evidence.pt-BR.svg">
+</picture>
 
 Como ler: uma pasta por caso, uma subpasta por rodada. Os prints são numerados na ordem em que foram tirados, então a pasta se lê como o passo a passo. O `evidence.json` guarda o que a página fez na rede (corpo só de erro e de escrita) e o que ela escreveu no console. O trace do Playwright, com snapshot do DOM e corpo das respostas, só fica nas rodadas que não passaram, porque é pesado e rodada que passou raramente precisa dele. A lista de campos está na [referência da evidência](../reference/evidence.md).
 
